@@ -12,29 +12,17 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey)
 
-/**
- * Parametrar till callJsonModel.
- * (Ingen generic här – T används bara på funktionen.)
- */
 type CallJsonModelParams = {
   input: string
-  /**
-   * JSON-schema (t.ex. din compareAds.schema.json) som modellen ska följa.
-   */
   schema?: Schema
   modelName?: string
 }
 
-/**
- * Generiskt anrop mot Gemini där vi:
- * - tvingar JSON-svar
- * - (valfritt) anger responseSchema = hela schemat du skickar in
- * - parsar svaret till T
- */
 export async function callJsonModel<T>({
   input,
   schema,
-  modelName = 'gemini-2.5-pro',
+  // ÄNDRA HÄR: använd flash som standard istället för pro
+  modelName = 'gemini-2.5-flash',
 }: CallJsonModelParams): Promise<T> {
   const model = genAI.getGenerativeModel({ model: modelName })
 
@@ -51,20 +39,15 @@ export async function callJsonModel<T>({
       ? {
           responseMimeType: 'application/json',
           responseSchema: schema,
+          // (valfritt) begränsa storleken på svaret:
+          maxOutputTokens: 2048,
         }
       : {
           responseMimeType: 'application/json',
+          maxOutputTokens: 2048,
         },
   })
 
   const raw = result.response.text()
-  // console.log('Raw JSON from model:', raw)
-
-  try {
-    return JSON.parse(raw) as T
-  } catch (err) {
-    console.error('Kunde inte parsa JSON från modellen:', err)
-    console.error('Råtext var:', raw)
-    throw new Error('Kunde inte tolka JSON-svaret från modellen.')
-  }
+  return JSON.parse(raw) as T
 }
