@@ -271,6 +271,8 @@ REGLER:
 - Skapa både "applicationAdvice" och "deepAnalysisPerAd" enligt mallen ovan.
 - Skapa 5–7 frågor i "questions", där varje svarsalternativ kopplas till exakt EN annons via "adId".
 
+Svara med ENDAST JSON-objektet enligt ovanstående struktur.
+
 Här är annonserna:
 
 ${adListText}

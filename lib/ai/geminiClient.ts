@@ -11,7 +11,7 @@ if (!apiKey) {
 
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null
 
-export function getGeminiModel(modelName = 'gemini-2.5-flash') {
+export function getGeminiModel(modelName = 'gemini-2.5-flash-lite') {
   if (!genAI) {
     throw new Error(
       'GEMINI_API_KEY saknas i serverns miljövariabler. ' +
