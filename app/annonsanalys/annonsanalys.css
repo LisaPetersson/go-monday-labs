@@ -1,0 +1,602 @@
+:root {
+  --gm-primary: #54833ee1;
+  --gm-primary-hover: #42ac12;
+  --gm-primary-active: #3c831b;
+  --gm-secondary: #ebebeb;
+  --gm-secondary-hover: #f3f3f3;
+  --light-gray-bg: #f8fafa;
+  --border-color: #e5ebeb;
+  --text-color: #3c3c3c;
+  --text-color-light: #959e9f;
+  --white: #ffffff;
+  --success-color: #20c997;
+  --warning-color: #f39c12;
+
+  --shadow-card: 0 5px 20px 0 rgba(0, 0, 0, 0.05);
+  --shadow-btn: 0 5px 10px #2f5a1b;
+  --radius-card: 10px;
+  --radius-btn: 8px;
+}
+
+body {
+  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  background: var(--light-gray-bg);
+  color: var(--text-color);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Rubik", sans-serif;
+  font-weight: 600;
+}
+
+.app {
+  max-width: 70vw;
+  margin: 0 auto;
+  padding: 30px 24px 40px;
+}
+
+footer {
+  text-align: center;
+  padding: 25px 0;
+  font-size: 14px;
+  background: var(--white);
+}
+
+/* ===== Buttons ===== */
+
+.btn {
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+  font-size: 15px;
+  padding: 10px 20px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn.secondary {
+  background: rgb(236, 248, 231);
+  color: var(--text-color);
+  border-color: var(--gm-secondary);
+}
+
+.btn.secondary:hover {
+  background: var(--gm-secondary-hover);
+  border-color: var(--gm-secondary-hover);
+}
+
+.btn.primary {
+  background-color: var(--gm-primary);
+  color: white;
+  border-color: var(--gm-primary);
+}
+
+.btn.primary:hover:not(:disabled) {
+  background-color: var(--gm-primary-hover);
+  border-color: var(--gm-primary-hover);
+  box-shadow: 0 5px 12px #2f5a1b;
+  transform: translateY(-1px);
+}
+
+.btn.primary:active:not(:disabled) {
+  background-color: var(--gm-primary-active);
+  border-color: var(--gm-primary-active);
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Loading state för knapp */
+
+.btn.is-loading {
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* ===== Workspace Layout ===== */
+
+.workspace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.workspace-title {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.workspace-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.btn-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+#tagline {
+  font-size: 16px;
+  font-weight: 200;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.workspace-grid.two-col {
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .workspace-grid.two-col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.workspace-section {
+  display: block;
+  margin-top: 45px;
+}
+
+.section-heading {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+/* ===== Widget (vänsterkortet) ===== */
+
+.widget {
+  background-color: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  border: none;
+}
+
+.widget-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.widget-header h3 {
+  font-size: 16px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.widget-body {
+  padding: 20px;
+  font-size: 14px;
+}
+
+/* ===== Cards (höger analysdel) ===== */
+
+.cards-flex {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .cards-flex {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Gör att varje kort storleksanpassar sig efter eget innehåll */
+.cards-flex .analysis-card {
+  align-self: start;
+  width: 100%;
+}
+
+.analysis-card {
+  border-radius: var(--radius-card);
+  border: none;
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+}
+
+.analysis-card.is-warning {
+  border-left: 4px solid var(--warning-color);
+}
+
+.analysis-card-header {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  background-color: var(--white);
+}
+
+.analysis-card-header h4 {
+  margin: 0;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-weight: 500;
+}
+
+.analysis-card-header .icon {
+  font-size: 18px;
+  width: 20px;
+  text-align: center;
+}
+
+.header-summary {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-color-light);
+  margin-left: 4px;
+}
+
+.match-locked {
+  font-size: 12px;
+  color: var(--text-color-light);
+}
+
+.header-summary .lock-icon {
+  margin-right: 4px;
+  font-size: 13px;
+}
+
+.analysis-card-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border-color);
+  font-size: 14px;
+  background-color: var(--white);
+}
+
+.analysis-card-body h5 {
+  font-size: 0.9em;
+  text-transform: uppercase;
+  color: var(--text-color-light);
+  margin: 16px 0 8px;
+  font-weight: 500;
+}
+
+.analysis-card-body p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.analysis-card-body ul {
+  margin: 0;
+  padding-left: 0;
+  list-style-type: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.analysis-subsection {
+  margin-bottom: 16px;
+}
+
+.analysis-card-body .empty-state {
+  color: var(--text-color-light);
+  font-style: italic;
+}
+
+/* ===== Inmatning av annonser (vänstersida) ===== */
+
+/* Container för alla annonsrutor + plus-ruta */
+.ad-input-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Varje annonsruta blir en flexibel kolumn */
+.ad-input-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 240px; /* minbredd ~240px, växer upp till 1fr */
+  max-width: 100%;
+}
+
+/* Label för fälten */
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* Textarea-stil för annonserna */
+.ad-textarea {
+  width: 100%;
+  min-height: 180px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--border-color);
+  padding: 12px;
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+/* "+"-kortet för att lägga till fler annonser – beter sig som en kolumn */
+.ad-add-card {
+  flex: 1 1 240px;
+  max-width: 100%;
+  border-radius: var(--radius-btn);
+  border: 1px dashed var(--border-color);
+  background: transparent;
+  color: var(--text-color-light);
+  font-size: 14px;
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ad-add-card:hover {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--accent-color, #4f46e5);
+  color: var(--accent-color, #4f46e5);
+}
+
+.ad-add-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.ad-add-text {
+  font-size: 13px;
+}
+
+/* Rad med knapp + liten hinttext */
+.analyze-row {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: var(--text-color-light);
+}
+
+/* Felmeddelande */
+.error-message {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fdecea;
+  color: #b71c1c;
+  font-size: 13px;
+}
+
+/* ===== Dynamiska sektioner (full width under korten) ===== */
+
+.dynamic-sections {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dynamic-section-card {
+  width: 100%;
+}
+
+.dynamic-section-description {
+  margin-bottom: 12px;
+}
+
+/* Kolumnlayout per annons i varje sektion */
+.dynamic-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+/* Skillnader – full width under kolumnerna */
+.dynamic-section-differences {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.dynamic-section-differences ul {
+  margin-top: 6px;
+}
+
+.dynamic-section-differences li {
+  line-height: 1.4;
+}
+
+/* ===== Övrigt ===== */
+
+.section-result {
+  margin-top: 50px;
+}
+
+/* === Preferensmodal för frågor === */
+
+body.pref-modal-open .app {
+  filter: blur(4px);
+}
+
+/* Introtexten högst upp i modalen */
+.pref-intro {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-color);
+  margin: 0 0 14px;
+}
+
+.pref-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.35); /* lite mörkare dim */
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease-out;
+}
+
+.pref-modal-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pref-modal-panel {
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28);
+  width: min(720px, 95vw);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* rundade hörn även när det scrollar */
+}
+
+/* Header/body/footer ärvs från dina .modal-* regler,
+   men vi ger lite extra spacing här */
+
+.pref-modal-panel .modal-header {
+  position: relative;
+  padding-right: 40px; /* lite extra luft så inte titeln krockar med X */
+  padding: 18px 22px;
+}
+
+/* Återanvänd gärna befintliga .modal-header, .modal-body, .modal-footer, .close-btn */
+.pref-modal-panel .modal-body {
+  padding: 18px 22px 16px;
+  overflow-y: auto;
+}
+
+.pref-modal-panel .close-btn {
+  position: absolute;
+  right: 16px;
+  top: 10px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.pref-modal-panel .modal-footer {
+  padding: 14px 22px 16px;
+}
+
+/* Lista med frågor */
+.pref-questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Varje enskild fråga som en liten "card" */
+.pref-question {
+  background: #f6faf8;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  padding: 10px 12px 10px;
+}
+
+/* Frågetexten */
+.pref-question-text {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+/* Alternativen visas i kolumn med luft */
+.pref-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Rad per alternativ */
+.pref-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Själva radioknappen */
+.pref-option input[type="radio"] {
+  margin-top: 2px;
+}
+
+/* Texten bredvid radioknappen */
+.pref-option-label {
+  display: inline-block;
+}
+
+/* Knappen i footern */
+.pref-modal-panel .modal-footer .btn.secondary {
+  min-width: 230px;
+  justify-content: center;
+}
+
+.lock-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+  font-size: 14px;
+}

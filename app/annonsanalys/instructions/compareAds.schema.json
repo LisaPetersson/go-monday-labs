@@ -1,0 +1,272 @@
+{
+    "title": "MultiAnnonsAnalys",
+    "description": "Strukturerad analys av flera jobbannonser.",
+    "type": "object",
+    "required": [
+        "ads",
+        "comparison",
+        "sections"
+    ],
+    "properties": {
+        "ads": {
+            "type": "array",
+            "description": "Lista över analyserade annonser.",
+            "items": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "label",
+                    "summary",
+                    "score"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Kort ID för annonsen, t.ex. 'A', 'B', 'C'."
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Kombinerad titel + arbetsgivare, t.ex. 'Projektledare IT – Region Skåne'."
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "Kort sammanfattning av annonsen."
+                    },
+                    "score": {
+                        "type": "number",
+                        "description": "Matchningsscore för annonsen (0–100)."
+                    }
+                }
+            }
+        },
+        "comparison": {
+            "type": "object",
+            "description": "Övergripande slutsats för alla annonser.",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "recommendationAdId": {
+                    "type": "string",
+                    "description": "ID för den annons som rekommenderas (t.ex. 'A'). Kan utelämnas om ingen tydlig vinnare finns."
+                },
+                "recommendationLabel": {
+                    "type": "string",
+                    "description": "Textetikett för rekommendationen, t.ex. 'Projektledare IT – Region Skåne'."
+                },
+                "reason": {
+                    "type": "string",
+                    "description": "Motivering till slutsats/rekommendation."
+                }
+            }
+        },
+        "sections": {
+            "type": "array",
+            "description": "Dynamiska jämförelsesektioner.",
+            "items": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "title",
+                    "description",
+                    "perAd"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Tekniskt ID för sektionen, t.ex. 'arbetsuppgifter'."
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Rubrik som visas i gränssnittet."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Kort sammanfattning av vad sektionen handlar om."
+                    },
+                    "perAd": {
+                        "type": "array",
+                        "description": "Innehåll per annons för den här sektionen.",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "adId",
+                                "highlights"
+                            ],
+                            "properties": {
+                                "adId": {
+                                    "type": "string",
+                                    "description": "ID för annonsen som detta innehåll gäller (måste matcha ett ads[].id)."
+                                },
+                                "highlights": {
+                                    "type": "array",
+                                    "description": "Viktigaste punkterna för denna aspekt i just den annonsen.",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "key_differences": {
+                        "type": "array",
+                        "description": "De viktigaste skillnaderna mellan annonserna för just denna aspekt.",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "application_advice": {
+            "type": "object",
+            "description": "Råd till kandidaten inför ansökan, per tjänst och ev. generella tips.",
+            "properties": {
+                "perAd": {
+                    "type": "array",
+                    "description": "Råd per annons.",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "adId"
+                        ],
+                        "properties": {
+                            "adId": {
+                                "type": "string",
+                                "description": "ID för annonsen som råden gäller (måste matcha ett ads[].id)."
+                            },
+                            "summary": {
+                                "type": "string",
+                                "description": "Kort sammanfattning av vad kandidaten bör tänka på i sin ansökan för den här tjänsten."
+                            },
+                            "themes": {
+                                "type": "array",
+                                "description": "Teman att lyfta i ansökan (t.ex. ansvar, samarbete, förändringsledning).",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "keywords": {
+                                "type": "array",
+                                "description": "Nyckelord som bör finnas med i CV/ansökan.",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "ats_tips": {
+                                "type": "array",
+                                "description": "Tips kring formuleringar, struktur eller ordval som kan påverka ATS/filtrering.",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "general_tips": {
+                    "type": "array",
+                    "description": "Generella tips som gäller alla annonser.",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "deep_analysis": {
+            "type": "object",
+            "description": "Fördjupad analys per tjänst.",
+            "properties": {
+                "perAd": {
+                    "type": "array",
+                    "description": "Fördjupad analys per annons.",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "adId"
+                        ],
+                        "properties": {
+                            "adId": {
+                                "type": "string",
+                                "description": "ID för annonsen som analysen gäller (måste matcha ett ads[].id)."
+                            },
+                            "strengths": {
+                                "type": "array",
+                                "description": "Styrkor och möjligheter med tjänsten ur kandidatens perspektiv.",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "risks": {
+                                "type": "array",
+                                "description": "Risker eller saker som kandidaten bör vara uppmärksam på.",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "culture": {
+                                "type": "string",
+                                "description": "Kort text om kultur och arbetssätt (2–4 meningar)."
+                            },
+                            "growth": {
+                                "type": "string",
+                                "description": "Kort text om utvecklingsmöjligheter (2–4 meningar)."
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "questions": {
+            "type": "array",
+            "description": "Preferensfrågor till kandidaten. Modellen bör skapa ett OJÄMNT antal frågor (5, 7 eller 9) för att kunna ge en tydlig vinnare.",
+            "minItems": 5,
+            "maxItems": 9,
+            "items": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "text",
+                    "options"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Tekniskt ID för frågan (ex. 'work_style')."
+                    },
+                    "text": {
+                        "type": "string",
+                        "description": "Själva frågetexten som visas för användaren."
+                    },
+                    "options": {
+                        "type": "array",
+                        "description": "Svarsalternativ. Varje alternativ måste kopplas till exakt en annons via adId.",
+                        "minItems": 2,
+                        "maxItems": 4,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "id",
+                                "label",
+                                "adId"
+                            ],
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "description": "Tekniskt ID för alternativet (ex. 'work_style_a')."
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "description": "Text som användaren ser som svarsalternativ."
+                                },
+                                "adId": {
+                                    "type": "string",
+                                    "description": "ID för den annons som detta svarsalternativ pekar mot (t.ex. 'A', 'B', 'C')."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
