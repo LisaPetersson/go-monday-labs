@@ -7,23 +7,39 @@ import {
 const apiKey = process.env.GEMINI_API_KEY
 
 if (!apiKey) {
-  throw new Error('GEMINI_API_KEY saknas i .env.local')
+  // Viktigt: kasta INTE här – det gör att hela funktionen kraschar innan vår route hinner fånga felet.
+  console.warn(
+    'GEMINI_API_KEY saknas i miljövariablerna. AI-funktioner kommer inte fungera förrän den sätts.'
+  )
 }
 
-const genAI = new GoogleGenerativeAI(apiKey)
+// Om nyckeln finns skapar vi klienten, annars lämnar vi den som null
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null
 
+/**
+ * Parametrar till callJsonModel.
+ */
 type CallJsonModelParams = {
   input: string
   schema?: Schema
   modelName?: string
 }
 
+/**
+ * Anropar en Gemini-modell som returnerar JSON.
+ */
 export async function callJsonModel<T>({
   input,
   schema,
-  // ÄNDRA HÄR: använd flash som standard istället för pro
-  modelName = 'gemini-2.5-flash',
+  modelName = 'gemini-2.5-flash', // snabbare modell passar Netlify bättre
 }: CallJsonModelParams): Promise<T> {
+  if (!genAI) {
+    throw new Error(
+      'GEMINI_API_KEY saknas i serverns miljövariabler. ' +
+        'Lägg till den i Netlify under Environment variables.'
+    )
+  }
+
   const model = genAI.getGenerativeModel({ model: modelName })
 
   const hasSchema = Boolean(schema)
@@ -39,7 +55,6 @@ export async function callJsonModel<T>({
       ? {
           responseMimeType: 'application/json',
           responseSchema: schema,
-          // (valfritt) begränsa storleken på svaret:
           maxOutputTokens: 2048,
         }
       : {
@@ -49,5 +64,16 @@ export async function callJsonModel<T>({
   })
 
   const raw = result.response.text()
-  return JSON.parse(raw) as T
+
+  if (!raw) {
+    throw new Error('Modellen returnerade inget innehåll (tomt svar).')
+  }
+
+  try {
+    return JSON.parse(raw) as T
+  } catch (err) {
+    console.error('Kunde inte parsa JSON från modellen:', err)
+    console.error('Råtext var:', raw)
+    throw new Error('Kunde inte tolka JSON-svaret från modellen.')
+  }
 }

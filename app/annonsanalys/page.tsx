@@ -133,63 +133,61 @@ export default function AnnonsanalysPage() {
     setAds((prev) => [...prev, ''])
   }
 
- const handleAnalyze = async () => {
-  if (!canAnalyze || loading) return
+  const handleAnalyze = async () => {
+    if (!canAnalyze || loading) return
 
-  setLoading(true)
-  setError(null)
-  setResult(null)
-  setAnswers({})
-  setIsPrefModalOpen(false)
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    setAnswers({})
+    setIsPrefModalOpen(false)
 
-  try {
-    const res = await fetch('/annonsanalys/compare', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ads }),
-    })
+    try {
+      const res = await fetch('/annonsanalys/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ads }),
+      })
 
-    const text = await res.text()
-    let parsed: unknown = null   // 👈 ändrat från any till unknown
+      const text = await res.text()
+      let parsed: unknown = null
 
-    if (text) {
-      try {
-        parsed = JSON.parse(text)
-      } catch (parseErr) {
-        console.error(
-          'Kunde inte parsa svar från /annonsanalys/compare:',
-          parseErr,
-          text
-        )
+      if (text) {
+        try {
+          parsed = JSON.parse(text)
+        } catch (parseErr) {
+          console.error(
+            'Kunde inte parsa svar från /annonsanalys/compare:',
+            parseErr,
+            text
+          )
+        }
       }
+
+      if (!res.ok) {
+        const data = (parsed ?? {}) as ErrorResponse
+        const msg = data.error ?? 'Något gick fel vid analysen.'
+        throw new Error(msg)
+      }
+
+      const data = parsed as AdsAnalysisResult
+
+      console.log('AI raw result:', data)
+      console.log('ads:', (data as AdsAnalysisResult | null)?.ads)
+      console.log('sections:', (data as AdsAnalysisResult | null)?.sections)
+      console.log('questions:', (data as AdsAnalysisResult | null)?.questions)
+
+      setResult(data)
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || 'Okänt fel.')
+      } else {
+        setError(String(err) || 'Okänt fel.')
+      }
+    } finally {
+      setLoading(false)
     }
-
-    if (!res.ok) {
-      const data = (parsed ?? {}) as ErrorResponse
-      const msg = data.error ?? 'Något gick fel vid analysen.'
-      throw new Error(msg)
-    }
-
-    const data = parsed as AdsAnalysisResult
-
-    // Debug-loggar
-    console.log('AI raw result:', data)
-    console.log('ads:', data?.ads)
-    console.log('sections:', data?.sections)
-    console.log('questions:', data?.questions)
-
-    setResult(data)
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      setError(err.message || 'Okänt fel.')
-    } else {
-      setError(String(err) || 'Okänt fel.')
-    }
-  } finally {
-    setLoading(false)
   }
-}
-
 
   const handleAnswerChange = (questionId: string, adId: string) => {
     setAnswers((prev) => ({
