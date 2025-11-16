@@ -4,12 +4,10 @@ import './annonsanalys.css'
 import { useState } from 'react'
 import type { AdsAnalysisResult } from './ai/compareAds'
 
-
 import AdInputPanel from './components/AdInputPanel'
 import QuickAnalysisCards from './components/QuickAnalysisCards'
 import RecommendationSection from './components/RecommendationSection'
 import ApplicationAdviceSection from './components/ApplicationAdviceSection'
-
 import DeepAnalysisSection from './components/DeepAnalysisSection'
 import ComparisonSections from './components/ComparisonSections'
 import PreferenceModal from './components/PreferenceModal'
@@ -121,8 +119,7 @@ export default function AnnonsanalysPage() {
   const [isPrefModalOpen, setIsPrefModalOpen] = useState(false)
 
   const canAnalyze =
-    ads[0]?.trim().length > 0 &&
-    ads[1]?.trim().length > 0
+    ads[0]?.trim().length > 0 && ads[1]?.trim().length > 0
 
   const handleAdChange = (index: number, value: string) => {
     setAds((prev) => {
@@ -136,53 +133,63 @@ export default function AnnonsanalysPage() {
     setAds((prev) => [...prev, ''])
   }
 
-  const handleAnalyze = async () => {
-    if (!canAnalyze || loading) return
-    setLoading(true)
-    setError(null)
-    setResult(null)
-    setAnswers({})
-    setIsPrefModalOpen(false)
+ const handleAnalyze = async () => {
+  if (!canAnalyze || loading) return
 
-    try {
-      const res = await fetch('/annonsanalys/compare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ads }),
-      })
+  setLoading(true)
+  setError(null)
+  setResult(null)
+  setAnswers({})
+  setIsPrefModalOpen(false)
 
-      if (!res.ok) {
-        const text = await res.text()
-        let data: ErrorResponse = {}
-        try {
-          data = JSON.parse(text) as ErrorResponse
-        } catch {
-          // ignore parse error
-        }
-        throw new Error(data.error ?? 'Något gick fel vid analysen.')
+  try {
+    const res = await fetch('/annonsanalys/compare', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ads }),
+    })
+
+    const text = await res.text()
+    let parsed: unknown = null   // 👈 ändrat från any till unknown
+
+    if (text) {
+      try {
+        parsed = JSON.parse(text)
+      } catch (parseErr) {
+        console.error(
+          'Kunde inte parsa svar från /annonsanalys/compare:',
+          parseErr,
+          text
+        )
       }
-
-      const data: AdsAnalysisResult = await res.json()
-
-// 🔍 Lägg till dessa rader för att se vad AI:t faktiskt returnerar
-console.log('AI raw result:', data)
-console.log('ads:', data.ads)
-console.log('sections:', data.sections)
-console.log('questions:', data.questions)
-
-setResult(data)
-
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || 'Okänt fel.')
-      } else {
-        setError(String(err) || 'Okänt fel.')
-      }
-    } finally {
-      setLoading(false)
     }
-    
+
+    if (!res.ok) {
+      const data = (parsed ?? {}) as ErrorResponse
+      const msg = data.error ?? 'Något gick fel vid analysen.'
+      throw new Error(msg)
+    }
+
+    const data = parsed as AdsAnalysisResult
+
+    // Debug-loggar
+    console.log('AI raw result:', data)
+    console.log('ads:', data?.ads)
+    console.log('sections:', data?.sections)
+    console.log('questions:', data?.questions)
+
+    setResult(data)
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      setError(err.message || 'Okänt fel.')
+    } else {
+      setError(String(err) || 'Okänt fel.')
+    }
+  } finally {
+    setLoading(false)
   }
+}
+
 
   const handleAnswerChange = (questionId: string, adId: string) => {
     setAnswers((prev) => ({
@@ -208,14 +215,18 @@ setResult(data)
   const recommendedAd =
     topPreference && result
       ? result.ads.find(
-          (ad) => normalizeAdId(ad.id) === normalizeAdId(topPreference.adId)
+          (ad) =>
+            normalizeAdId(ad.id) === normalizeAdId(topPreference.adId)
         )
       : null
 
-  const recommendedLabel = recommendedAd?.label ?? topPreference?.label ?? null
+  const recommendedLabel =
+    recommendedAd?.label ?? topPreference?.label ?? null
 
   const shouldShowRecommendationCard =
-    Boolean(topPreference) && allQuestionsAnswered && Boolean(recommendedLabel)
+    Boolean(topPreference) &&
+    allQuestionsAnswered &&
+    Boolean(recommendedLabel)
 
   return (
     <>
@@ -250,7 +261,9 @@ setResult(data)
         </div>
 
         <div id="tagline">
-          <h2>Vad säger jobbannonserna egentligen och vilket jobb bör du söka?</h2>
+          <h2>
+            Vad säger jobbannonserna egentligen och vilket jobb bör du söka?
+          </h2>
         </div>
 
         {/* HUVUDLAYOUT: två kolumner */}
@@ -288,14 +301,13 @@ setResult(data)
           recommendedLabel={recommendedLabel}
         />
 
-       {/* 2. INFÖR DIN ANSÖKAN */}
-{result && (
-  <ApplicationAdviceSection
-    result={result}
-    normalizeAdId={normalizeAdId}
-  />
-)}
-
+        {/* 2. INFÖR DIN ANSÖKAN */}
+        {result && (
+          <ApplicationAdviceSection
+            result={result}
+            normalizeAdId={normalizeAdId}
+          />
+        )}
 
         {/* 3. FÖRDJUPAD ANALYS PER TJÄNST */}
         <DeepAnalysisSection
@@ -322,8 +334,8 @@ setResult(data)
       <div>
         <footer>
           <p>
-            Annonsanalysen använder AI och kan begå misstag.
-            Kontrollera viktig information.
+            Annonsanalysen använder AI och kan begå misstag. Kontrollera viktig
+            information.
           </p>
         </footer>
       </div>
