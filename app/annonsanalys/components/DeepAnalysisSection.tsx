@@ -35,7 +35,7 @@ export default function DeepAnalysisSection({ result, normalizeAdId }: Props) {
 
   return (
     <section className="workspace-section">
-      <h2 className="section-heading">Fördjupad analys per tjänst</h2>
+      <h2 className="section-heading">Fördjupad analys för varje annons</h2>
      <p><i>Ev. pro-funktion som endast syns efter matchning</i></p>
       <div className="cards-flex">
         {result.ads.map((ad) => {
@@ -86,7 +86,7 @@ export default function DeepAnalysisSection({ result, normalizeAdId }: Props) {
 
                 {risks && risks.length > 0 && (
                   <div className="analysis-subsection">
-                    <h5>Risker / saker att vara uppmärksam på</h5>
+                    <h5>Risker & saker att vara uppmärksam på</h5>
                     <ul>
                       {risks.map((item, i) => (
                         <li key={`risk-${normalizeAdId(ad.id)}-${i}`}>

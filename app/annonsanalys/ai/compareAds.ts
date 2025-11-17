@@ -19,7 +19,6 @@ export type AnalyzedAd = {
   score: number
 }
 
-
 /**
  * Innehåll per annons i en jämförelsesektion.
  */
@@ -160,7 +159,7 @@ STRUKTUR (exakt så här, men anpassat till innehållet):
     {
       "id": "A",
       "title": "Tjänstetitel för annons A",
-      "company": "Företagets namn om det går att se",
+      "company": "Företagets namn och slutkunden, om det går att se",
       "summary": "Kort sammanfattning av vad rollen går ut på.",
       "score": 0
     }
@@ -168,8 +167,8 @@ STRUKTUR (exakt så här, men anpassat till innehållet):
   ],
   "comparison": {
     "recommendationAdId": "A" | "B" | "C" | null,
-    "recommendationLabel": "Tjänst + arbetsgivare som du spontant tycker passar bäst, t.ex. 'Informationssäkerhetsspecialist hos Rasluson Consult'",
-    "reason": "Kort motivering till varför just den tjänsten framstår som mest attraktiv / bäst match mot en typisk kandidat."
+    "recommendationLabel": "Tjänst + arbetsgivare som passar bäst baserat på svaren i "questions", t.ex. 'Informationssäkerhetsspecialist hos Rasluson Consult'",
+    "reason": "Kort motivering till varför tjänsten som fick flest "score" genom "questions" framstår som mest attraktiv. Till exempel: 'Baserat på dina svar verkar "recommendationLabel" passa dig bäst eftersom du prioriterar X och Y, vilket framgår tydligt i annonsen genom...'"
   },
   "sections": [
     {
@@ -264,36 +263,65 @@ STRUKTUR (exakt så här, men anpassat till innehållet):
 }
 
 REGLER:
-- "applicationAdvice" ska använd formuleringar som är reflekterande exemplvis; "Du skulle kunna...", "Kanske kan du...", "Ett exempel är...", "Fundera på att...". "Var explicit med att användaren ska anpassa sina dokument efter varje tjänst som sökes."
+- "applicationAdvice" ska använd formuleringar som är reflekterande exemplvis; "Du skulle kunna...", "Kanske kan du...", "Ett exempel är...", "Fundera på att...". Var explicit med att användaren ska anpassa sina dokument efter varje tjänst som sökes.
 - "reason" i "comparison" ska vara tydlig med varför en viss tjänst rekommenderas.
 - "ads" måste innehålla en post per annons. "id" ska vara "A", "B", "C" osv.
 - "summary" ska vara 2–4 meningar som verkligen hjälper kandidaten att förstå tjänsten.
 - "score" är en bedömning 0–100 baserat på svaren användaren ger på frågorna i "questions".
-- Skapa 3–5 sektioner i "sections" med perAd-innehåll och key_differences.
-- Skapa både "applicationAdvice" och "deepAnalysisPerAd" enligt mallen ovan.
+- Skapa 5-7 "keyword" i "applicationAdvice" som är relevanta för just den tjänsten.
+- Skapa 4–6 sektioner i "sections" med perAd-innehåll och key_differences.
 - Skapa 5–7 frågor i "questions", där varje svarsalternativ kopplas till exakt EN annons via "adId".
+- Skapa både "applicationAdvice" och "deepAnalysisPerAd" enligt mallen ovan.
 
 Här är annonserna:
 
 ${adListText}
 `.trim()
 
- const analysis = await callJsonModel<AdsAnalysisResult>({
-  input,
-})
+  // 👉 1) Anropa modellen med JSON-schemat så den tvingas följa strukturen
+    // Anropa modellen – vi skickar bara in input (ingen schema-parameter)
+  const analysis = await callJsonModel<AdsAnalysisResult>({
+    input,
+  })
 
-// Säkerställ att varje annons har ett label-fält som kan användas i UI:t
-const normalizedAds = analysis.ads.map((ad) => {
-  const fallbackLabel = ad.company ? `${ad.title} – ${ad.company}` : ad.title
-  return {
-    ...ad,
-    label: ad.label ?? fallbackLabel,
+  // Säkerställ att comparison alltid finns
+  let comparison = analysis.comparison ?? {
+    recommendationAdId: undefined,
+    recommendationLabel: undefined,
+    reason: '',
   }
-})
 
-return {
-  ...analysis,
-  ads: normalizedAds,
-}
-}
+  // Försök hitta en bra label för fallback-texten
+  const recAdId = comparison.recommendationAdId
+  const recommendedFromAds =
+    (recAdId &&
+      analysis.ads.find(
+        (ad) =>
+          ad.id.trim().toUpperCase() === recAdId.trim().toUpperCase()
+      )?.label) ||
+    comparison.recommendationLabel
 
+  const fallbackRecommendedLabel =
+    recommendedFromAds || 'den rekommenderade tjänsten'
+
+  // Om modellen inte gav någon reason → sätt en vettig motivering ändå
+  if (!comparison.reason || !comparison.reason.trim()) {
+    comparison.reason = `Utifrån annonsinnehållet framstår ${fallbackRecommendedLabel} som den mest intressanta möjligheten i nuläget.`
+  }
+
+  // Säkerställ att varje annons har ett label-fält som kan användas i UI:t
+  const normalizedAds = analysis.ads.map((ad) => {
+    const fallbackLabel = ad.company ? `${ad.title} – ${ad.company}` : ad.title
+    return {
+      ...ad,
+      label: ad.label ?? fallbackLabel,
+    }
+  })
+
+  // Returnera analysen med normaliserade ads + säkrad comparison
+  return {
+    ...analysis,
+    ads: normalizedAds,
+    comparison,
+  }
+}

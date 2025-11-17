@@ -66,6 +66,13 @@ type TopPreference = {
   totalAnswers: number
 }
 
+type AnswerReason = {
+  questionId: string
+  questionText: string
+  optionLabel: string
+}
+
+
 /** Hitta vinnaren baserat på svaren – men bara om ALLA frågor är besvarade */
 function getTopAdFromPreferences(
   res: AdsAnalysisResult | null,
@@ -210,7 +217,7 @@ export default function AnnonsanalysPage() {
 
   const topPreference = getTopAdFromPreferences(result, answers)
 
-  const recommendedAd =
+    const recommendedAd =
     topPreference && result
       ? result.ads.find(
           (ad) =>
@@ -221,10 +228,41 @@ export default function AnnonsanalysPage() {
   const recommendedLabel =
     recommendedAd?.label ?? topPreference?.label ?? null
 
+  // Motivering baserad på hur användaren svarat i frågorna
+  const answerReasons: AnswerReason[] = []
+
+  if (result && topPreference && Array.isArray(result.questions)) {
+    const topNormId = normalizeAdId(topPreference.adId)
+
+    for (const q of result.questions) {
+      const chosenAdId = answers[q.id]
+      if (!chosenAdId) continue
+
+      const chosenOption = q.options.find(
+        (opt) => normalizeAdId(opt.adId) === normalizeAdId(chosenAdId)
+      )
+      if (!chosenOption) continue
+
+      // bara svar som pekar mot den vinnande tjänsten
+      if (normalizeAdId(chosenOption.adId) !== topNormId) continue
+
+      answerReasons.push({
+        questionId: q.id,
+        questionText: q.text,
+        optionLabel: chosenOption.label,
+      })
+    }
+  }
+
+  // Motivering från AI (comparison.reason)
+  const aiReason = result?.comparison?.reason ?? null
+
+  // 👉 ENDA deklarationen av shouldShowRecommendationCard
   const shouldShowRecommendationCard =
     Boolean(topPreference) &&
     allQuestionsAnswered &&
     Boolean(recommendedLabel)
+
 
   return (
     <>
@@ -292,12 +330,15 @@ export default function AnnonsanalysPage() {
           </div>
         </section>
 
-        {/* 1. SLUTSATS & REKOMMENDATION (frågebaserad) */}
-        <RecommendationSection
-          show={shouldShowRecommendationCard}
-          topPreference={topPreference}
-          recommendedLabel={recommendedLabel}
-        />
+               {/* 1. SLUTSATS & REKOMMENDATION (frågebaserad, med tydlig motivering) */}
+              <RecommendationSection
+        show={shouldShowRecommendationCard}
+        topPreference={topPreference}
+        recommendedLabel={recommendedLabel}
+        answerReasons={answerReasons}
+        aiReason={aiReason}
+      />
+
 
         {/* 2. INFÖR DIN ANSÖKAN */}
         {result && (
