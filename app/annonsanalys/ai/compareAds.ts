@@ -193,29 +193,29 @@ STRUKTUR (exakt så här, men anpassat till innehållet):
       ],
       "key_differences": [
         "hur rollinnehållet skiljer sig mellan tjänsterna",
-        "om de är lika kan du skriva att de är liknande"
+        "om de är lika kan du skriva att de är liknande och på vilket sätt"
       ]
     }
-    // 2–4 liknande sektioner, t.ex. "requirements", "conditions", "culture"
+    // 4–6 liknande sektioner, t.ex. "requirements", "conditions", "culture", "methods", "software", "values", eller andra lämpliga sektioner.
   ],
 
   "applicationAdvice": {
     "overallTips": [
-      "övergripande tips som gäller oavsett vilken tjänst kandidaten söker",
-      "t.ex. hur hen kan binda ihop erfarenheter med annonsernas behov"
+      "övergripande tips som gäller oavsett vilken tjänst kandidaten söker av de annonserna som är analyserande",
+      "t.ex. hur hen kan binda ihop erfarenheter, färdigheter och egenskaper med annonsernas behov" 
     ],
     "perAd": [
       {
         "adId": "A",
         "themes": [
-          "teman att lyfta i personligt brev/CV för den här tjänsten"
+          "Reflekterande förslag på teman att lyfta i personligt brev/CV för den här tjänsten"
         ],
         "keywords": [
           "viktiga ord/fraser från annonsen som är bra att använda",
           "både för mänskliga läsare och ATS"
         ],
         "atsTips": [
-          "konkreta tips för hur kandidaten kan formulera sig så att ATS lättare förstår matchningen"
+          "Reflekterande förslag för hur kandidaten skulle kunna fundera på att formulera sig så att ATS lättare förstår matchningen"
         ]
       }
       // en motsvarande post per annons
@@ -264,14 +264,14 @@ STRUKTUR (exakt så här, men anpassat till innehållet):
 }
 
 REGLER:
+- "applicationAdvice" ska använd formuleringar som är reflekterande exemplvis; "Du skulle kunna...", "Kanske kan du...", "Ett exempel är...", "Fundera på att...". "Var explicit med att användaren ska anpassa sina dokument efter varje tjänst som sökes."
+- "reason" i "comparison" ska vara tydlig med varför en viss tjänst rekommenderas.
 - "ads" måste innehålla en post per annons. "id" ska vara "A", "B", "C" osv.
 - "summary" ska vara 2–4 meningar som verkligen hjälper kandidaten att förstå tjänsten.
-- "score" är en generell bedömning 0–100 där högre är mer attraktiv/tydlig/relevant för en typisk kandidat med rätt bakgrund.
-- Skapa 2–4 sektioner i "sections" med perAd-innehåll och key_differences.
+- "score" är en bedömning 0–100 baserat på svaren användaren ger på frågorna i "questions".
+- Skapa 3–5 sektioner i "sections" med perAd-innehåll och key_differences.
 - Skapa både "applicationAdvice" och "deepAnalysisPerAd" enligt mallen ovan.
 - Skapa 5–7 frågor i "questions", där varje svarsalternativ kopplas till exakt EN annons via "adId".
-
-Svara med ENDAST JSON-objektet enligt ovanstående struktur.
 
 Här är annonserna:
 
