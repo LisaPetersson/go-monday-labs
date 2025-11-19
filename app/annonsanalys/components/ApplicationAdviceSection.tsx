@@ -34,11 +34,19 @@ export default function ApplicationAdviceSection({ result, normalizeAdId }: Prop
 
   if (!hasAnyContent) return null
 
-  const labelForAd = (ad: AdsAnalysisResult['ads'][number]) => {
-    const title = ad.title?.trim() || 'Okänd roll'
-    const company = ad.company?.trim()
-    return company ? `${title} – ${company}` : title
-  }
+ const labelForAd = (ad: AdsAnalysisResult['ads'][number]) => {
+  const label = ad.label?.trim()
+  if (label) return label
+
+  const title = ad.title?.trim()
+  const company = ad.company?.trim()
+
+  if (title && company) return `${title} – ${company}`
+  if (title) return title
+  if (company) return company
+
+  return 'Okänd roll'
+}
 
   return (
     <section className="workspace-section">

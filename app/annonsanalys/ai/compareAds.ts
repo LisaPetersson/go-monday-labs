@@ -1,5 +1,6 @@
 // app/annonsanalys/ai/compareAds.ts
 import { callJsonModel } from '@/lib/ai/jsonModel'
+import compareAdsSchema from '../instructions/compareAds.schema.json';
 
 /**
  * Bas-info per annons som används i snabbanalysen.
@@ -146,137 +147,20 @@ export async function analyzeAdsWithGemini(
     })
     .join('\n\n')
 
-  const input = `
-Du är en senior rekryterare och karriärcoach. Du får flera jobbannonser och ska göra en strukturerad analys.
+ const schemaText = JSON.stringify(compareAdsSchema, null, 2);
 
-VIKTIGT: Du ska svara ENBART med ett JSON-objekt som följer strukturen nedan.
-Inga förklaringar eller text utanför JSON.
+const input = `
+Du får en lista med jobbannonser under rubriken ANNONSER.
+Skapa ett svar som följer JSON-schemat ANALYSIS_SCHEMA.
 
-STRUKTUR (exakt så här, men anpassat till innehållet):
+ANALYSIS_SCHEMA:
+${schemaText}
 
-{
-  "ads": [
-    {
-      "id": "A",
-      "title": "Tjänstetitel för annons A",
-      "company": "Företagets namn och slutkunden, om det går att se",
-      "summary": "Kort sammanfattning av vad rollen går ut på.",
-      "score": 0
-    }
-    // en post per annons ("B", "C" osv)
-  ],
-  "comparison": {
-    "recommendationAdId": "A" | "B" | "C" | null,
-    "recommendationLabel": "Tjänst + arbetsgivare som passar bäst baserat på svaren i "questions", t.ex. 'Informationssäkerhetsspecialist hos Rasluson Consult'",
-    "reason": "Kort motivering till varför tjänsten som fick flest "score" genom "questions" framstår som mest attraktiv. Till exempel: 'Baserat på dina svar verkar "recommendationLabel" passa dig bäst eftersom du prioriterar X och Y, vilket framgår tydligt i annonsen genom...'"
-  },
-  "sections": [
-    {
-      "id": "role",
-      "title": "Roll och ansvarsområden",
-      "description": "Kort jämförelse av vad man faktiskt gör i tjänsterna.",
-      "perAd": [
-        {
-          "adId": "A",
-          "highlights": [
-            "konkret punkt om arbetsuppgifter i annons A",
-            "ytterligare en punkt"
-          ]
-        },
-        {
-          "adId": "B",
-          "highlights": [
-            "konkret punkt om arbetsuppgifter i annons B"
-          ]
-        }
-      ],
-      "key_differences": [
-        "hur rollinnehållet skiljer sig mellan tjänsterna",
-        "om de är lika kan du skriva att de är liknande och på vilket sätt"
-      ]
-    }
-    // 4–6 liknande sektioner, t.ex. "requirements", "conditions", "culture", "methods", "software", "values", eller andra lämpliga sektioner.
-  ],
-
-  "applicationAdvice": {
-    "overallTips": [
-      "övergripande tips som gäller oavsett vilken tjänst kandidaten söker av de annonserna som är analyserande",
-      "t.ex. hur hen kan binda ihop erfarenheter, färdigheter och egenskaper med annonsernas behov" 
-    ],
-    "perAd": [
-      {
-        "adId": "A",
-        "themes": [
-          "Reflekterande förslag på teman att lyfta i personligt brev/CV för den här tjänsten"
-        ],
-        "keywords": [
-          "viktiga ord/fraser från annonsen som är bra att använda",
-          "både för mänskliga läsare och ATS"
-        ],
-        "atsTips": [
-          "Reflekterande förslag för hur kandidaten skulle kunna fundera på att formulera sig så att ATS lättare förstår matchningen"
-        ]
-      }
-      // en motsvarande post per annons
-    ]
-  },
-
-  "deepAnalysisPerAd": [
-    {
-      "adId": "A",
-      "strengths": [
-        "vad som är extra positivt med den här tjänsten",
-        "vilka typer av kandidater som kan trivas"
-      ],
-      "risks": [
-        "eventuella nackdelar eller fallgropar man bör känna till"
-      ],
-      "cultureAndFit": [
-        "vad man kan utläsa om kultur, arbetssätt och ledarskap"
-      ],
-      "development": [
-        "hur tjänsten kan bidra till långsiktiga mål och karriärutveckling"
-      ]
-    }
-    // en post per annons
-  ],
-
-  "questions": [
-    {
-      "id": "q1",
-      "text": "Reflekterande fråga som hjälper kandidaten att välja mellan tjänsterna.",
-      "options": [
-        {
-          "id": "q1_a",
-          "label": "svarsalternativ som pekar tydligt mot en viss typ av tjänst",
-          "adId": "A"
-        },
-        {
-          "id": "q1_b",
-          "label": "svarsalternativ som pekar mot en annan tjänst",
-          "adId": "B"
-        }
-      ]
-    }
-    // totalt 5–7 frågor
-  ]
-}
-
-REGLER:
-- "applicationAdvice" ska använd formuleringar som är reflekterande exemplvis; "Du skulle kunna...", "Kanske kan du...", "Ett exempel är...", "Fundera på att...". Var explicit med att användaren ska anpassa sina dokument efter varje tjänst som sökes.
-- "reason" i "comparison" ska vara tydlig med varför en viss tjänst rekommenderas.
-- "ads" måste innehålla en post per annons. "id" ska vara "A", "B", "C" osv.
-- "summary" ska vara 2–4 meningar som verkligen hjälper kandidaten att förstå tjänsten.
-- "score" är en bedömning 0–100 baserat på svaren användaren ger på frågorna i "questions".
-- Skapa 5-7 "keyword" i "applicationAdvice" som är relevanta för just den tjänsten.
-- Skapa 4–6 sektioner i "sections" med perAd-innehåll och key_differences.
-- Skapa 5–7 frågor i "questions", där varje svarsalternativ kopplas till exakt EN annons via "adId".
-- Skapa både "applicationAdvice" och "deepAnalysisPerAd" enligt mallen ovan.
-
-Här är annonserna:
-
+ANNONSER:
 ${adListText}
-`.trim()
+`.trim();
+
+
 
   // 👉 1) Anropa modellen med JSON-schemat så den tvingas följa strukturen
     // Anropa modellen – vi skickar bara in input (ingen schema-parameter)
@@ -285,7 +169,7 @@ ${adListText}
   })
 
   // Säkerställ att comparison alltid finns
-  let comparison = analysis.comparison ?? {
+  const comparison = analysis.comparison ?? {
     recommendationAdId: undefined,
     recommendationLabel: undefined,
     reason: '',

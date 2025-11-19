@@ -17,10 +17,22 @@ export default function DeepAnalysisSection({ result, normalizeAdId }: Props) {
     deep.find((item) => normalizeAdId(item.adId) === normalizeAdId(adId))
 
   const labelForAd = (ad: AdsAnalysisResult['ads'][number]) => {
-    const title = ad.title?.trim() || 'Okänd roll'
-    const company = ad.company?.trim()
-    return company ? `${title} – ${company}` : title
-  }
+  // 1. Primärt: använd label om den finns (AI fyller den oftast)
+  const label = ad.label?.trim()
+  if (label) return label
+
+  // 2. Fallback: bygg label av title + company om de finns
+  const title = ad.title?.trim()
+  const company = ad.company?.trim()
+
+  if (title && company) return `${title} – ${company}`
+  if (title) return title
+  if (company) return company
+
+  // 3. Sista fallback
+  return 'Okänd roll'
+}
+
 
   // Kolla om det faktiskt finns något innehåll alls
   const hasAnyContent = deep.some((d) =>

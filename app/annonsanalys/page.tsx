@@ -201,6 +201,7 @@ export default function AnnonsanalysPage() {
       console.log('ads:', (data as AdsAnalysisResult | null)?.ads)
       console.log('sections:', (data as AdsAnalysisResult | null)?.sections)
       console.log('questions:', (data as AdsAnalysisResult | null)?.questions)
+      console.log('deepAnalysisPerAd:', (data as AdsAnalysisResult).deepAnalysisPerAd, 'keys:', Object.keys(data || {}))
 
       setResult(data)
     } catch (err: unknown) {

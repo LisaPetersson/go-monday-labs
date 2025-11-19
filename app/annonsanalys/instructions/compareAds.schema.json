@@ -1,16 +1,18 @@
 {
-    "title": "MultiAnnonsAnalys",
-    "description": "Strukturerad analys av flera jobbannonser.",
+    "title": "AdsAnalysisResult",
+    "description": "Du är en senior rekryterare och karriärcoach. Du får flera jobbannonser och ska göra en strukturerad analys. Du ska alltid svara ENBART med ett JSON-objekt som följer detta schema. Läs särskilt alla \"description\"-fält – de innehåller detaljerade instruktioner om hur fälten ska fyllas, inklusive antal punkter, ton och längd.",
     "type": "object",
     "required": [
         "ads",
         "comparison",
-        "sections"
+        "sections",
+        "applicationAdvice",
+        "deepAnalysisPerAd"
     ],
     "properties": {
         "ads": {
             "type": "array",
-            "description": "Lista över analyserade annonser.",
+            "description": "Lista över analyserade annonser. Måste innehålla en post per annons som modellen har fått (A, B, C osv).",
             "items": {
                 "type": "object",
                 "required": [
@@ -22,7 +24,7 @@
                 "properties": {
                     "id": {
                         "type": "string",
-                        "description": "Kort ID för annonsen, t.ex. 'A', 'B', 'C'."
+                        "description": "Kort ID för annonsen, t.ex. 'A', 'B', 'C'. ID ska stämma överens med taggarna [ANNONS A], [ANNONS B] osv i ingångstexten."
                     },
                     "label": {
                         "type": "string",
@@ -30,11 +32,11 @@
                     },
                     "summary": {
                         "type": "string",
-                        "description": "Kort sammanfattning av annonsen."
+                        "description": "Kort sammanfattning av annonsen (2–4 meningar) som verkligen hjälper kandidaten att förstå vad tjänsten går ut på."
                     },
                     "score": {
                         "type": "number",
-                        "description": "Matchningsscore för annonsen (0–100)."
+                        "description": "Matchningsscore för annonsen (0–100), baserad på hur väl annonsen matchar kandidatens svar i 'questions'."
                     }
                 }
             }
@@ -56,13 +58,15 @@
                 },
                 "reason": {
                     "type": "string",
-                    "description": "Motivering till slutsats/rekommendation."
+                    "description": "Tydlig motivering till varför en viss tjänst rekommenderas. Utgå från kandidatens svar i 'questions' och förklara hur dessa prioriteringar syns i den rekommenderade annonsen (t.ex. 'Baserat på dina svar verkar X viktigast för dig, vilket framgår tydligt i ...')."
                 }
             }
         },
         "sections": {
             "type": "array",
-            "description": "Dynamiska jämförelsesektioner.",
+            "description": "Dynamiska jämförelsesektioner. Skapa 4–6 sektioner som belyser olika aspekter (t.ex. arbetsuppgifter, krav, villkor, kultur, utvecklingsmöjligheter).",
+            "minItems": 4,
+            "maxItems": 6,
             "items": {
                 "type": "object",
                 "required": [
@@ -110,7 +114,7 @@
                     },
                     "key_differences": {
                         "type": "array",
-                        "description": "De viktigaste skillnaderna mellan annonserna för just denna aspekt.",
+                        "description": "De viktigaste skillnaderna mellan annonserna för just denna aspekt. Formulera 1–3 konkreta meningar eller punkter som tydligt beskriver hur tjänsterna skiljer sig, eller om de är lika – på vilket sätt.",
                         "items": {
                             "type": "string"
                         }
@@ -118,10 +122,17 @@
                 }
             }
         },
-        "application_advice": {
+        "applicationAdvice": {
             "type": "object",
-            "description": "Råd till kandidaten inför ansökan, per tjänst och ev. generella tips.",
+            "description": "Råd till kandidaten inför ansökan, per tjänst och generella tips. Formuleringarna ska vara reflekterande, t.ex. 'Du skulle kunna...', 'Kanske kan du...', 'Ett exempel är...', 'Fundera på att...'. Var tydlig med att kandidaten behöver anpassa sina dokument efter varje specifik tjänst.",
             "properties": {
+                "overallTips": {
+                    "type": "array",
+                    "description": "Övergripande tips som gäller oavsett vilken av de analyserade tjänsterna kandidaten söker.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "perAd": {
                     "type": "array",
                     "description": "Råd per annons.",
@@ -141,76 +152,71 @@
                             },
                             "themes": {
                                 "type": "array",
-                                "description": "Teman att lyfta i ansökan (t.ex. ansvar, samarbete, förändringsledning).",
+                                "description": "Reflekterande förslag på teman att lyfta i personligt brev/CV för den här tjänsten (t.ex. ansvar, samarbete, förändringsledning).",
                                 "items": {
                                     "type": "string"
                                 }
                             },
                             "keywords": {
                                 "type": "array",
-                                "description": "Nyckelord som bör finnas med i CV/ansökan.",
+                                "description": "5–7 viktiga ord/fraser från annonsen som är bra att använda i CV/ansökan, både för mänskliga läsare och ATS.",
+                                "minItems": 5,
+                                "maxItems": 7,
                                 "items": {
                                     "type": "string"
                                 }
                             },
-                            "ats_tips": {
+                            "atsTips": {
                                 "type": "array",
-                                "description": "Tips kring formuleringar, struktur eller ordval som kan påverka ATS/filtrering.",
+                                "description": "Reflekterande förslag på hur kandidaten skulle kunna formulera sig och strukturera ansökan så att ATS lättare förstår matchningen.",
                                 "items": {
                                     "type": "string"
                                 }
                             }
                         }
                     }
-                },
-                "general_tips": {
-                    "type": "array",
-                    "description": "Generella tips som gäller alla annonser.",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
-        "deep_analysis": {
-            "type": "object",
-            "description": "Fördjupad analys per tjänst.",
-            "properties": {
-                "perAd": {
-                    "type": "array",
-                    "description": "Fördjupad analys per annons.",
-                    "items": {
-                        "type": "object",
-                        "required": [
-                            "adId"
-                        ],
-                        "properties": {
-                            "adId": {
-                                "type": "string",
-                                "description": "ID för annonsen som analysen gäller (måste matcha ett ads[].id)."
-                            },
-                            "strengths": {
-                                "type": "array",
-                                "description": "Styrkor och möjligheter med tjänsten ur kandidatens perspektiv.",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "risks": {
-                                "type": "array",
-                                "description": "Risker eller saker som kandidaten bör vara uppmärksam på.",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "culture": {
-                                "type": "string",
-                                "description": "Kort text om kultur och arbetssätt (2–4 meningar)."
-                            },
-                            "growth": {
-                                "type": "string",
-                                "description": "Kort text om utvecklingsmöjligheter (2–4 meningar)."
-                            }
+        "deepAnalysisPerAd": {
+            "type": "array",
+            "description": "Fördjupad analys per tjänst. Skapa detta block för varje annons.",
+            "items": {
+                "type": "object",
+                "required": [
+                    "adId"
+                ],
+                "properties": {
+                    "adId": {
+                        "type": "string",
+                        "description": "ID för annonsen som analysen gäller (måste matcha ett ads[].id)."
+                    },
+                    "strengths": {
+                        "type": "array",
+                        "description": "Vad som är extra positivt med den här tjänsten och vilka typer av kandidater som kan trivas.",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "risks": {
+                        "type": "array",
+                        "description": "Eventuella nackdelar eller fallgropar man bör känna till.",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "cultureAndFit": {
+                        "type": "array",
+                        "description": "2–4 meningar om kultur, arbetssätt och ledarskap – utifrån det som faktiskt står eller antyds i annonsen. En mening per arraypost.",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "development": {
+                        "type": "array",
+                        "description": "2–4 meningar om hur tjänsten kan bidra till långsiktiga mål och karriärutveckling. En mening per arraypost.",
+                        "items": {
+                            "type": "string"
                         }
                     }
                 }
@@ -218,7 +224,7 @@
         },
         "questions": {
             "type": "array",
-            "description": "Preferensfrågor till kandidaten. Modellen bör skapa ett OJÄMNT antal frågor (5, 7 eller 9) för att kunna ge en tydlig vinnare.",
+            "description": "Reflekterande frågor som hjälper kandidaten att välja mellan tjänsterna. Skapa 5–7 frågor som täcker olika aspekter (t.ex. arbetssätt, utveckling, värderingar, arbetsmiljö). Formulera frågorna så att de bjuder in till eftertanke.",
             "minItems": 5,
             "maxItems": 9,
             "items": {
@@ -239,7 +245,7 @@
                     },
                     "options": {
                         "type": "array",
-                        "description": "Svarsalternativ. Varje alternativ måste kopplas till exakt en annons via adId.",
+                        "description": "Svarsalternativ. Varje alternativ ska peka tydligt mot en viss typ av tjänst och måste kopplas till exakt en annons via adId.",
                         "minItems": 2,
                         "maxItems": 4,
                         "items": {
@@ -256,11 +262,11 @@
                                 },
                                 "label": {
                                     "type": "string",
-                                    "description": "Text som användaren ser som svarsalternativ."
+                                    "description": "Text som användaren ser som svarsalternativ. Formulera så att valet tydligt antyder vilken typ av tjänst kandidaten föredrar."
                                 },
                                 "adId": {
                                     "type": "string",
-                                    "description": "ID för den annons som detta svarsalternativ pekar mot (t.ex. 'A', 'B', 'C')."
+                                    "description": "ID för den annons som detta svarsalternativ pekar mot (t.ex. 'A', 'B', 'C'). Varje alternativ ska kopplas till exakt EN annons."
                                 }
                             }
                         }
