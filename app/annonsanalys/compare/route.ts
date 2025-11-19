@@ -4,6 +4,8 @@ import {
   analyzeAdsWithGemini,
   type AdsAnalysisResult,
 } from '../ai/compareAds'
+import { supabaseServer } from '@/lib/supabaseServerClient';
+
 
 type ErrorResponse = {
   error: string
@@ -64,10 +66,22 @@ export async function POST(req: Request) {
     return NextResponse.json(res, { status: 400 })
   }
 
-  // 5. Kör AI-analysen via helpern i compareAds.ts
+   // 5. Kör AI-analysen via helpern i compareAds.ts
   try {
     const analysis: AdsAnalysisResult =
       await analyzeAdsWithGemini(normalizedAds)
+
+    // 👉 Spara resultatet i Supabase
+    const { error: insertError } = await supabaseServer
+      .from('ad_analyses')
+      .insert({
+        raw_ads: normalizedAds,
+        result: analysis,
+      })
+
+    if (insertError) {
+      console.error('Kunde inte spara analys i Supabase:', insertError)
+    }
 
     // Logga resultatet så vi kan se om sections kommer med
     console.log('AI analysis result:', JSON.stringify(analysis, null, 2))
@@ -83,3 +97,4 @@ export async function POST(req: Request) {
     return NextResponse.json(res, { status: 500 })
   }
 }
+

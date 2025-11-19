@@ -5,13 +5,6 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -23,4 +16,194 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================
+   Login / Auth – globalt
+   ========================= */
+
+.login-page {
+  min-height: 100vh;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    padding: 2rem 1rem;
+  }
+}
+
+.login-layout {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2.2rem;
+}
+
+.login-app-title {
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.login-app-tagline {
+  max-width: 560px;
+  margin: 0 auto;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #4b5563;
+}
+
+/* Kortet */
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px 28px 26px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.login-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.login-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 1.2rem;
+}
+
+/* Form */
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.field-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.login-input {
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  background: #f9fafb;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.35);
+  background: #ffffff;
+}
+
+.login-error {
+  font-size: 0.8rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+}
+
+/* Knappar */
+
+.login-actions {
+  margin-top: 0.6rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.login-primary-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #16a34a;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.28);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+}
+
+.login-primary-btn:hover {
+  background: #15803d;
+  box-shadow: 0 10px 22px rgba(22, 163, 74, 0.35);
+  transform: translateY(-1px);
+}
+
+.login-primary-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 5px 12px rgba(22, 163, 74, 0.25);
+}
+
+/* Laddning */
+
+.login-loading {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* Topbar när man är inloggad */
+
+.login-topbar {
+  width: 100%;
+  background: #000000;
+  color: #f9fafb;
+}
+
+.login-topbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.85rem;
+}
+
+.login-user-email {
+  opacity: 0.9;
+}
+
+.login-logout-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.login-logout-btn:hover {
+  background: #e5e7eb;
 }
