@@ -70,6 +70,43 @@ export default function AuthGate({ children }: AuthGateProps) {
     }
   }, [])
 
+  // Globalt: gör alla cards/widgets med header fällbara
+  useEffect(() => {
+    const handleClick = (event: Event) => {
+      const target = event.target as HTMLElement | null
+      if (!target) return
+
+      // Hitta närmaste header vi bryr oss om
+      const header = target.closest(
+        '.analysis-card-header, .widget-header'
+      ) as HTMLElement | null
+
+      if (!header) return
+
+      // Hitta själva kortet (article.analysis-card eller div.widget)
+      const card = header.closest(
+        '.analysis-card, .widget'
+      ) as HTMLElement | null
+
+      if (!card) return
+
+      // Möjlighet att opt-out om vi skulle vilja i framtiden:
+      if (header.dataset.nocollapse === 'true') return
+
+      // Toggle kollaps
+      card.classList.toggle('is-collapsed')
+
+      const isCollapsed = card.classList.contains('is-collapsed')
+      header.setAttribute('aria-expanded', (!isCollapsed).toString())
+    }
+
+    document.addEventListener('click', handleClick)
+
+    return () => {
+      document.removeEventListener('click', handleClick)
+    }
+  }, [])
+
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)

@@ -775,3 +775,49 @@ body.pref-modal-open .app {
   font-size: 0.9rem;
   color: #111827;
 }
+
+/* =========================================
+   Fällbara cards & widgets (globalt)
+   ========================================= */
+
+/* Gör tydligt att headern är klickbar */
+.analysis-card-header,
+.widget-header {
+  cursor: pointer;
+}
+
+/* Pil-indikator i headern */
+.analysis-card-header::after,
+.widget-header::after {
+  content: "▾";
+  margin-left: auto;
+  font-size: 28px;
+  opacity: 0.6;
+  display: inline-block;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+/* När kortet är kollapsat roterar vi pilen */
+.analysis-card.is-collapsed .analysis-card-header::after,
+.widget.is-collapsed .widget-header::after {
+  transform: rotate(-90deg);
+  opacity: 0.45;
+}
+
+/* Dölj body när kortet är kollapsat */
+.analysis-card.is-collapsed .analysis-card-body {
+  display: none;
+  border-top: none;
+}
+
+/* Dölj body i widget när kollapsad */
+.widget.is-collapsed .widget-body {
+  display: none;
+  border-top: none;
+}
+
+/* Ta bort onödig kant mellan header & body när kollapsad */
+.analysis-card.is-collapsed .analysis-card-header,
+.widget.is-collapsed .widget-header {
+  border-bottom: none;
+}
