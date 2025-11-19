@@ -73,7 +73,6 @@ type AnswerReason = {
   optionLabel: string
 }
 
-
 /** Hitta vinnaren baserat på svaren – men bara om ALLA frågor är besvarade */
 function getTopAdFromPreferences(
   res: AdsAnalysisResult | null,
@@ -126,6 +125,7 @@ export default function AnnonsanalysPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [isPrefModalOpen, setIsPrefModalOpen] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [hasSavedAnswers, setHasSavedAnswers] = useState(false)
 
   // Hämta inloggad användare från Supabase (kopplas till AuthGate)
   useEffect(() => {
@@ -143,7 +143,6 @@ export default function AnnonsanalysPage() {
 
   const canAnalyze =
     ads[0]?.trim().length > 0 && ads[1]?.trim().length > 0
-
 
   const handleAdChange = (index: number, value: string) => {
     setAds((prev) => {
@@ -165,13 +164,13 @@ export default function AnnonsanalysPage() {
     setResult(null)
     setAnswers({})
     setIsPrefModalOpen(false)
+    setHasSavedAnswers(false) // ny analys → ny spar-omgång
 
     try {
       const res = await fetch('/annonsanalys/compare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ads, userId }),
-
       })
 
       const text = await res.text()
@@ -201,7 +200,12 @@ export default function AnnonsanalysPage() {
       console.log('ads:', (data as AdsAnalysisResult | null)?.ads)
       console.log('sections:', (data as AdsAnalysisResult | null)?.sections)
       console.log('questions:', (data as AdsAnalysisResult | null)?.questions)
-      console.log('deepAnalysisPerAd:', (data as AdsAnalysisResult).deepAnalysisPerAd, 'keys:', Object.keys(data || {}))
+      console.log(
+        'deepAnalysisPerAd:',
+        (data as AdsAnalysisResult).deepAnalysisPerAd,
+        'keys:',
+        Object.keys(data || {})
+      )
 
       setResult(data)
     } catch (err: unknown) {
@@ -236,7 +240,7 @@ export default function AnnonsanalysPage() {
 
   const topPreference = getTopAdFromPreferences(result, answers)
 
-    const recommendedAd =
+  const recommendedAd =
     topPreference && result
       ? result.ads.find(
           (ad) =>
@@ -276,12 +280,56 @@ export default function AnnonsanalysPage() {
   // Motivering från AI (comparison.reason)
   const aiReason = result?.comparison?.reason ?? null
 
-  // 👉 ENDA deklarationen av shouldShowRecommendationCard
   const shouldShowRecommendationCard =
     Boolean(topPreference) &&
     allQuestionsAnswered &&
     Boolean(recommendedLabel)
 
+  // 👉 Spara svaren i ad_preference_answers när alla frågor är besvarade
+  useEffect(() => {
+    const saveAnswers = async () => {
+      if (!userId) return
+      if (!result || !Array.isArray(result.questions)) return
+      if (!allQuestionsAnswered) return
+      if (hasSavedAnswers) return
+
+      const rows = []
+
+      for (const q of result.questions) {
+        const chosenAdId = answers[q.id]
+        if (!chosenAdId) continue
+
+        const chosenOption = q.options.find(
+          (opt) => normalizeAdId(opt.adId) === normalizeAdId(chosenAdId)
+        )
+        if (!chosenOption) continue
+
+        rows.push({
+          user_id: userId,
+          question_id: q.id,
+          question_text: q.text,
+          option_id: chosenOption.id,
+          option_label: chosenOption.label,
+          ad_id: chosenOption.adId,
+        })
+      }
+
+      if (rows.length === 0) return
+
+      const { error } = await supabase
+        .from('ad_preference_answers')
+        .insert(rows)
+
+      if (error) {
+        console.error('Kunde inte spara preferenssvar:', error)
+        return
+      }
+
+      setHasSavedAnswers(true)
+    }
+
+    saveAnswers()
+  }, [userId, result, answers, allQuestionsAnswered, hasSavedAnswers])
 
   return (
     <>
@@ -300,17 +348,6 @@ export default function AnnonsanalysPage() {
                 ?
               </span>
               Hjälp
-            </button>
-            <button
-              id="login-btn"
-              className="btn secondary"
-              type="button"
-              title="Logga in via ditt Go Monday-konto"
-            >
-              <span className="btn-icon" aria-hidden="true">
-                {/* ikon senare */}
-              </span>
-              Logga in
             </button>
           </div>
         </div>
@@ -349,15 +386,14 @@ export default function AnnonsanalysPage() {
           </div>
         </section>
 
-               {/* 1. SLUTSATS & REKOMMENDATION (frågebaserad, med tydlig motivering) */}
-              <RecommendationSection
-        show={shouldShowRecommendationCard}
-        topPreference={topPreference}
-        recommendedLabel={recommendedLabel}
-        answerReasons={answerReasons}
-        aiReason={aiReason}
-      />
-
+        {/* 1. SLUTSATS & REKOMMENDATION */}
+        <RecommendationSection
+          show={shouldShowRecommendationCard}
+          topPreference={topPreference}
+          recommendedLabel={recommendedLabel}
+          answerReasons={answerReasons}
+          aiReason={aiReason}
+        />
 
         {/* 2. INFÖR DIN ANSÖKAN */}
         {result && (

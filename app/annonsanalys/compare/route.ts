@@ -76,13 +76,19 @@ export async function POST(req: Request) {
       await analyzeAdsWithGemini(normalizedAds);
 
     // 👉 Spara resultatet i Supabase (använder nu ad_rawdata + user_id)
-    const { error: insertError } = await supabaseServer
-      .from('ad_rawdata')
-      .insert({
-        raw_ads: normalizedAds,
-        result: analysis,
-        user_id: userId ?? null,
-      });
+    const comparison = analysis.comparison ?? {};
+const recommendedAdId = comparison.recommendationAdId ?? null;
+const recommendedLabel = comparison.recommendationLabel ?? null;
+
+const { error: insertError } = await supabaseServer
+  .from('ad_rawdata')
+  .insert({
+    raw_ads: normalizedAds,
+    result: analysis,
+    user_id: userId ?? null,
+    recommended_ad_id: recommendedAdId,
+    recommended_label: recommendedLabel,
+  });
 
     if (insertError) {
       console.error('Kunde inte spara analys i Supabase:', insertError);
