@@ -1,7 +1,9 @@
+// app/annonsanalys/page.tsx
 'use client'
 
 import './annonsanalys.css'
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import type { AdsAnalysisResult } from './ai/compareAds'
 
@@ -15,6 +17,24 @@ import PreferenceModal from './components/PreferenceModal'
 
 type ErrorResponse = {
   error?: string
+}
+
+/** Rad från ad_rawdata när vi hämtar en sparad analys */
+type AnalysisRowFromDb = {
+  id: string
+  raw_ads: string[] | null
+  result: AdsAnalysisResult
+}
+
+/** Rad från tabellen med sparade preferenssvar */
+type PreferenceAnswerRow = {
+  question_id: string
+  question_text: string
+  option_id: string
+  option_label: string
+  ad_id: string
+  analysis_id: string | null
+  created_at: string
 }
 
 /** Normalisera ett annons-ID till en bokstav: "A", "B", "C"... */
@@ -40,7 +60,7 @@ function getPreferenceScores(
 
   const scores: Record<string, number> = {}
 
-  // initiera med 0 för alla annonser
+  // initiera med 0
   for (const ad of res.ads) {
     const norm = normalizeAdId(ad.id)
     if (!(norm in scores)) {
@@ -125,9 +145,13 @@ export default function AnnonsanalysPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [isPrefModalOpen, setIsPrefModalOpen] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [analysisId, setAnalysisId] = useState<string | null>(null)
   const [hasSavedAnswers, setHasSavedAnswers] = useState(false)
 
-  // Hämta inloggad användare från Supabase (kopplas till AuthGate)
+  const searchParams = useSearchParams()
+  const analysisIdFromUrl = searchParams.get('analysisId')
+
+  // Hämta inloggad användare
   useEffect(() => {
     const loadUser = async () => {
       const { data, error } = await supabase.auth.getUser()
@@ -140,6 +164,64 @@ export default function AnnonsanalysPage() {
 
     loadUser()
   }, [])
+
+  // Om vi har analysisId i URL:en: ladda sparad analys + sparade svar
+  useEffect(() => {
+    const loadSavedAnalysis = async () => {
+      if (!analysisIdFromUrl || !userId) return
+
+      setLoading(true)
+      setError(null)
+
+      const { data, error } = await supabase
+        .from('ad_rawdata')
+        .select('id, raw_ads, result')
+        .eq('id', analysisIdFromUrl)
+        .eq('user_id', userId)
+        .single()
+
+      if (error) {
+        console.error('Kunde inte hämta sparad analys:', error)
+        setError('Kunde inte hämta den sparade analysen.')
+        setLoading(false)
+        return
+      }
+
+      const row = data as AnalysisRowFromDb
+
+      setAnalysisId(row.id)
+
+      if (row.raw_ads && Array.isArray(row.raw_ads)) {
+        setAds(row.raw_ads)
+      }
+      setResult(row.result)
+      setIsPrefModalOpen(false)
+
+      // Hämta sparade preferenssvar till den här analysen
+      const { data: answersData, error: answersError } = await supabase
+        .from('ad_preference_answers')
+        .select('question_id, ad_id')
+        .eq('analysis_id', row.id)
+        .eq('user_id', userId)
+
+      if (answersError) {
+        console.error('Kunde inte hämta sparade preferenssvar:', answersError)
+        setAnswers({})
+        setHasSavedAnswers(false)
+      } else {
+        const restored: Record<string, string> = {}
+        ;(answersData as PreferenceAnswerRow[] | null)?.forEach((r) => {
+          restored[r.question_id] = r.ad_id
+        })
+        setAnswers(restored)
+        setHasSavedAnswers(Object.keys(restored).length > 0)
+      }
+
+      setLoading(false)
+    }
+
+    void loadSavedAnalysis()
+  }, [analysisIdFromUrl, userId])
 
   const canAnalyze =
     ads[0]?.trim().length > 0 && ads[1]?.trim().length > 0
@@ -164,7 +246,8 @@ export default function AnnonsanalysPage() {
     setResult(null)
     setAnswers({})
     setIsPrefModalOpen(false)
-    setHasSavedAnswers(false) // ny analys → ny spar-omgång
+    setHasSavedAnswers(false)
+    setAnalysisId(null)
 
     try {
       const res = await fetch('/annonsanalys/compare', {
@@ -195,19 +278,22 @@ export default function AnnonsanalysPage() {
       }
 
       const data = parsed as AdsAnalysisResult
-
-      console.log('AI raw result:', data)
-      console.log('ads:', (data as AdsAnalysisResult | null)?.ads)
-      console.log('sections:', (data as AdsAnalysisResult | null)?.sections)
-      console.log('questions:', (data as AdsAnalysisResult | null)?.questions)
-      console.log(
-        'deepAnalysisPerAd:',
-        (data as AdsAnalysisResult).deepAnalysisPerAd,
-        'keys:',
-        Object.keys(data || {})
-      )
-
       setResult(data)
+
+      // Hämta senaste analys-id för den här användaren (den vi just sparade i /compare)
+      if (userId) {
+        const { data: latestRow, error: latestErr } = await supabase
+          .from('ad_rawdata')
+          .select('id')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+
+        if (!latestErr && latestRow) {
+          setAnalysisId((latestRow as { id: string }).id)
+        }
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message || 'Okänt fel.')
@@ -224,11 +310,12 @@ export default function AnnonsanalysPage() {
       ...prev,
       [questionId]: adId,
     }))
+    setHasSavedAnswers(false) // ny ändring → flagga att vi behöver spara igen
   }
 
   const hasQuestions =
     !!result &&
-    Array.isArray(result.questions) &&
+    Array.isArray(result?.questions) &&
     result.questions.length > 0
 
   const totalQuestions = result?.questions?.length ?? 0
@@ -251,7 +338,6 @@ export default function AnnonsanalysPage() {
   const recommendedLabel =
     recommendedAd?.label ?? topPreference?.label ?? null
 
-  // Motivering baserad på hur användaren svarat i frågorna
   const answerReasons: AnswerReason[] = []
 
   if (result && topPreference && Array.isArray(result.questions)) {
@@ -266,7 +352,6 @@ export default function AnnonsanalysPage() {
       )
       if (!chosenOption) continue
 
-      // bara svar som pekar mot den vinnande tjänsten
       if (normalizeAdId(chosenOption.adId) !== topNormId) continue
 
       answerReasons.push({
@@ -277,7 +362,6 @@ export default function AnnonsanalysPage() {
     }
   }
 
-  // Motivering från AI (comparison.reason)
   const aiReason = result?.comparison?.reason ?? null
 
   const shouldShowRecommendationCard =
@@ -285,51 +369,88 @@ export default function AnnonsanalysPage() {
     allQuestionsAnswered &&
     Boolean(recommendedLabel)
 
-  // 👉 Spara svaren i ad_preference_answers när alla frågor är besvarade
+  /**
+   * Spara preferenssvar när:
+   * - vi har userId + analysisId + result
+   * - alla frågor är besvarade
+   * - vi inte redan har sparat den aktuella omgången
+   */
   useEffect(() => {
-    const saveAnswers = async () => {
-      if (!userId) return
-      if (!result || !Array.isArray(result.questions)) return
-      if (!allQuestionsAnswered) return
+    const savePreferenceAnswers = async () => {
+      if (!userId || !analysisId || !result) return
+      if (!allQuestionsAnswered) {
+        setHasSavedAnswers(false)
+        return
+      }
       if (hasSavedAnswers) return
 
-      const rows = []
+      const rows = Object.entries(answers).flatMap(
+        ([questionId, adId]) => {
+          const question = result.questions?.find(
+            (q) => q.id === questionId
+          )
+          if (!question) return []
 
-      for (const q of result.questions) {
-        const chosenAdId = answers[q.id]
-        if (!chosenAdId) continue
+          const option = question.options.find(
+            (opt) =>
+              normalizeAdId(opt.adId) === normalizeAdId(adId)
+          )
+          if (!option) return []
 
-        const chosenOption = q.options.find(
-          (opt) => normalizeAdId(opt.adId) === normalizeAdId(chosenAdId)
+          return [
+            {
+              user_id: userId,
+              analysis_id: analysisId,
+              question_id: question.id,
+              question_text: question.text,
+              option_id: option.id,
+              option_label: option.label,
+              ad_id: option.adId,
+            },
+          ]
+        }
+      )
+
+      // Rensa gamla svar för just denna analys + användare
+      const { error: delError } = await supabase
+        .from('ad_preference_answers')
+        .delete()
+        .eq('user_id', userId)
+        .eq('analysis_id', analysisId)
+
+      if (delError) {
+        console.error(
+          'Kunde inte radera gamla preferenssvar:',
+          delError
         )
-        if (!chosenOption) continue
-
-        rows.push({
-          user_id: userId,
-          question_id: q.id,
-          question_text: q.text,
-          option_id: chosenOption.id,
-          option_label: chosenOption.label,
-          ad_id: chosenOption.adId,
-        })
       }
 
-      if (rows.length === 0) return
+      if (rows.length > 0) {
+        const { error: insError } = await supabase
+          .from('ad_preference_answers')
+          .insert(rows)
 
-      const { error } = await supabase
-        .from('ad_preference_answers')
-        .insert(rows)
-
-      if (error) {
-        console.error('Kunde inte spara preferenssvar:', error)
-        return
+        if (insError) {
+          console.error(
+            'Kunde inte spara preferenssvar:',
+            insError
+          )
+          return
+        }
       }
 
       setHasSavedAnswers(true)
     }
 
-    saveAnswers()
-  }, [userId, result, answers, allQuestionsAnswered, hasSavedAnswers])
+    void savePreferenceAnswers()
+  }, [
+    userId,
+    analysisId,
+    result,
+    allQuestionsAnswered,
+    answers,
+    hasSavedAnswers,
+  ])
 
   return (
     <>
@@ -354,13 +475,13 @@ export default function AnnonsanalysPage() {
 
         <div id="tagline">
           <h2>
-            Vad säger jobbannonserna egentligen och vilket jobb bör du söka?
+            Vad säger jobbannonserna egentligen och vilket jobb bör
+            du söka?
           </h2>
         </div>
 
         {/* HUVUDLAYOUT: två kolumner */}
         <section className="workspace-grid two-col workspace-section">
-          {/* VÄNSTER: input */}
           <AdInputPanel
             ads={ads}
             canAnalyze={canAnalyze}
@@ -371,7 +492,6 @@ export default function AnnonsanalysPage() {
             onAnalyze={handleAnalyze}
           />
 
-          {/* HÖGER: snabbanalys */}
           <div className="section-result">
             <h2 className="section-heading">Snabbanalys</h2>
 
@@ -386,7 +506,6 @@ export default function AnnonsanalysPage() {
           </div>
         </section>
 
-        {/* 1. SLUTSATS & REKOMMENDATION */}
         <RecommendationSection
           show={shouldShowRecommendationCard}
           topPreference={topPreference}
@@ -395,7 +514,6 @@ export default function AnnonsanalysPage() {
           aiReason={aiReason}
         />
 
-        {/* 2. INFÖR DIN ANSÖKAN */}
         {result && (
           <ApplicationAdviceSection
             result={result}
@@ -403,20 +521,17 @@ export default function AnnonsanalysPage() {
           />
         )}
 
-        {/* 3. FÖRDJUPAD ANALYS PER TJÄNST */}
         <DeepAnalysisSection
           result={result}
           normalizeAdId={normalizeAdId}
         />
 
-        {/* 4. ANNONSJÄMFÖRELSE */}
         <ComparisonSections
           result={result}
           normalizeAdId={normalizeAdId}
         />
       </main>
 
-      {/* Modal med frivilliga preferensfrågor */}
       <PreferenceModal
         open={!!result && hasQuestions && isPrefModalOpen}
         onClose={() => setIsPrefModalOpen(false)}
@@ -428,8 +543,8 @@ export default function AnnonsanalysPage() {
       <div>
         <footer>
           <p>
-            Annonsanalysen använder AI och kan begå misstag. Kontrollera viktig
-            information.
+            Annonsanalysen använder AI och kan begå misstag.
+            Kontrollera viktig information.
           </p>
         </footer>
       </div>

@@ -610,30 +610,168 @@ body.pref-modal-open .app {
   border: 1px solid #e5e7eb;
 }
 
-.history-list {
+/* =========================================
+      Min sida
+   ========================================= */
+/* ===== Min sida – historik ===== */
+
+.mypage-app .history-list {
   list-style: none;
-  margin: 0.75rem 0 0;
   padding: 0;
+  margin: 1rem 0 0;
 }
 
-.history-item {
-  font-size: 0.9rem;
-  padding: 0.4rem 0;
+.mypage-app .history-item {
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  background: #ffffff;
+}
+
+.mypage-app .history-row-main {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  border-top: 1px solid #e5e7eb;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.history-item:first-child {
-  border-top: none;
+.mypage-app .history-row-text {
+  font-size: 0.875rem;
+  color: #374151;
 }
 
-.history-date {
+.mypage-app .history-date {
   font-weight: 500;
-  color: #4b5563;
 }
 
-.history-label {
+.mypage-app .history-label {
+  font-weight: 500;
+}
+
+.mypage-app .history-open-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 1.1rem;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #16a34a;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(22, 163, 74, 0.25);
+  transition: background 0.1s ease, box-shadow 0.1s ease, transform 0.08s ease;
+}
+
+.mypage-app .history-open-btn:hover {
+  background: #111827;
+  color: #f9fafb;
+  border-color: #111827;
+  transform: translateY(-1px);
+}
+
+.mypage-app .history-ad-labels {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.mypage-app .history-ad-label {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* ===== Min sida – Personliga insikter ===== */
+
+.mypage-app .insights-section {
+  margin-top: 2.5rem;
+}
+
+.mypage-app .insights-header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.mypage-app .insights-meta {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.mypage-app .insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+}
+
+.mypage-app .insights-card-header {
+  padding-bottom: 0.35rem;
+}
+
+.mypage-app .insight-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* Färgkodning per annons (A/B/C). Fler bokstäver får fallback-stilen. */
+.mypage-app .insight-chip-A {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.mypage-app .insight-chip-B {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.mypage-app .insight-chip-C {
+  background: #fef9c3;
+  color: #92400e;
+}
+
+.mypage-app .insight-card-subtitle {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.mypage-app .insights-card-body {
+  padding-top: 0.35rem;
+}
+
+.mypage-app .insights-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mypage-app .insight-item + .insight-item {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+}
+
+.mypage-app .insight-question {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.mypage-app .insight-answer {
+  font-size: 0.9rem;
   color: #111827;
 }
