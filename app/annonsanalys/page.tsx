@@ -1,7 +1,8 @@
 'use client'
 
 import './annonsanalys.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 import type { AdsAnalysisResult } from './ai/compareAds'
 
 import AdInputPanel from './components/AdInputPanel'
@@ -124,9 +125,25 @@ export default function AnnonsanalysPage() {
 
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [isPrefModalOpen, setIsPrefModalOpen] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Hämta inloggad användare från Supabase (kopplas till AuthGate)
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data, error } = await supabase.auth.getUser()
+      if (error) {
+        console.error('Kunde inte hämta användare i AnnonsanalysPage:', error)
+        return
+      }
+      setUserId(data.user?.id ?? null)
+    }
+
+    loadUser()
+  }, [])
 
   const canAnalyze =
     ads[0]?.trim().length > 0 && ads[1]?.trim().length > 0
+
 
   const handleAdChange = (index: number, value: string) => {
     setAds((prev) => {
@@ -153,7 +170,8 @@ export default function AnnonsanalysPage() {
       const res = await fetch('/annonsanalys/compare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ads }),
+        body: JSON.stringify({ ads, userId }),
+
       })
 
       const text = await res.text()
