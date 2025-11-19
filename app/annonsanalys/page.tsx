@@ -14,6 +14,7 @@ import ApplicationAdviceSection from './components/ApplicationAdviceSection'
 import DeepAnalysisSection from './components/DeepAnalysisSection'
 import ComparisonSections from './components/ComparisonSections'
 import PreferenceModal from './components/PreferenceModal'
+import HelpModal from './components/HelpModal' // 👈 NY IMPORT
 
 type ErrorResponse = {
   error?: string
@@ -148,9 +149,27 @@ export default function AnnonsanalysPage() {
   const [analysisId, setAnalysisId] = useState<string | null>(null)
   const [hasSavedAnswers, setHasSavedAnswers] = useState(false)
 
+  const [isHelpOpen, setIsHelpOpen] = useState(false) // 👈 styr Hjälp-modal
+
   const searchParams = useSearchParams()
   const router = useRouter() // 👈 för att kunna ta bort analysisId från URL
   const analysisIdFromUrl = searchParams.get('analysisId')
+
+  // Lägg på en klass på body när någon modal är öppen (hjälp eller preferenser)
+  useEffect(() => {
+    const shouldBlur = isHelpOpen || isPrefModalOpen
+
+    if (shouldBlur) {
+      document.body.classList.add('pref-modal-open')
+    } else {
+      document.body.classList.remove('pref-modal-open')
+    }
+
+    // Städa upp om komponenten unmountas
+    return () => {
+      document.body.classList.remove('pref-modal-open')
+    }
+  }, [isHelpOpen, isPrefModalOpen])
 
   // Hämta inloggad användare
   useEffect(() => {
@@ -314,10 +333,10 @@ export default function AnnonsanalysPage() {
     setHasSavedAnswers(false) // ny ändring → flagga att vi behöver spara igen
   }
 
-  // 👇 NY: Rensa-knappens logik
+  // Rensa-knappens logik
   const handleReset = () => {
     // Återställ state
-    setAds(['', ''])          // två tomma annonser (startläge)
+    setAds(['', '']) // två tomma annonser (startläge)
     setResult(null)
     setError(null)
     setAnswers({})
@@ -481,6 +500,7 @@ export default function AnnonsanalysPage() {
               className="btn secondary"
               type="button"
               title="Visa instruktioner"
+              onClick={() => setIsHelpOpen(true)}
             >
               <span className="btn-icon" aria-hidden="true">
                 ?
@@ -507,7 +527,7 @@ export default function AnnonsanalysPage() {
             onChangeAd={handleAdChange}
             onAddAd={handleAddAd}
             onAnalyze={handleAnalyze}
-            onReset={handleReset}   // 👈 skickar in Rensa-hanteraren
+            onReset={handleReset}
           />
 
           <div className="section-result">
@@ -549,6 +569,12 @@ export default function AnnonsanalysPage() {
           normalizeAdId={normalizeAdId}
         />
       </main>
+
+      {/* Hjälp-modal som egen komponent */}
+      <HelpModal
+        open={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+      />
 
       <PreferenceModal
         open={!!result && hasQuestions && isPrefModalOpen}

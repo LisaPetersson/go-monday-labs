@@ -467,6 +467,37 @@ footer {
   margin-top: 50px;
 }
 
+.help-modal-body {
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.help-section {
+  margin-bottom: 1.8rem;
+}
+
+.help-section h3 {
+  margin-bottom: 0.6rem;
+}
+
+.help-section p {
+  margin: 0.2rem 0;
+}
+
+.help-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.help-list li {
+  margin-bottom: 0.4rem;
+}
+
+.help-note {
+  margin-top: 1.8rem;
+  font-size: 0.9rem;
+}
+
 /* === Preferensmodal för frågor === */
 
 body.pref-modal-open .app {
