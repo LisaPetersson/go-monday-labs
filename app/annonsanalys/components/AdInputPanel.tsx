@@ -1,5 +1,4 @@
 // app/annonsanalys/components/AdInputPanel.tsx
-// AdInputPanel.tsx – bara ansvar för inmatningen av annonser
 import React from 'react'
 
 type Props = {
@@ -10,6 +9,7 @@ type Props = {
   onChangeAd: (index: number, value: string) => void
   onAddAd: () => void
   onAnalyze: () => void
+  onReset: () => void   // 👈 NY PROP
 }
 
 const AdInputPanel: React.FC<Props> = ({
@@ -20,6 +20,7 @@ const AdInputPanel: React.FC<Props> = ({
   onChangeAd,
   onAddAd,
   onAnalyze,
+  onReset,
 }) => {
   const labelForIndex = (index: number) => {
     if (index === 0) return 'Annons A'
@@ -82,6 +83,17 @@ const AdInputPanel: React.FC<Props> = ({
             >
               {loading ? 'Analyserar annonser…' : 'Analysera & jämför'}
             </button>
+
+            {/* 👇 Ny Rensa-knapp bredvid analysera */}
+            <button
+              type="button"
+              className="btn secondary"
+              onClick={onReset}
+              disabled={loading}
+            >
+              Rensa
+            </button>
+
             {!canAnalyze && (
               <span className="hint-text">
                 Minst Annons A och Annons B måste vara ifyllda.

@@ -3,7 +3,7 @@
 
 import './annonsanalys.css'
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import type { AdsAnalysisResult } from './ai/compareAds'
 
@@ -149,6 +149,7 @@ export default function AnnonsanalysPage() {
   const [hasSavedAnswers, setHasSavedAnswers] = useState(false)
 
   const searchParams = useSearchParams()
+  const router = useRouter() // 👈 för att kunna ta bort analysisId från URL
   const analysisIdFromUrl = searchParams.get('analysisId')
 
   // Hämta inloggad användare
@@ -311,6 +312,22 @@ export default function AnnonsanalysPage() {
       [questionId]: adId,
     }))
     setHasSavedAnswers(false) // ny ändring → flagga att vi behöver spara igen
+  }
+
+  // 👇 NY: Rensa-knappens logik
+  const handleReset = () => {
+    // Återställ state
+    setAds(['', ''])          // två tomma annonser (startläge)
+    setResult(null)
+    setError(null)
+    setAnswers({})
+    setIsPrefModalOpen(false)
+    setAnalysisId(null)
+    setHasSavedAnswers(false)
+    setLoading(false)
+
+    // Ta bort analysisId från URL → gå till startpositionen
+    router.push('/annonsanalys')
   }
 
   const hasQuestions =
@@ -490,6 +507,7 @@ export default function AnnonsanalysPage() {
             onChangeAd={handleAdChange}
             onAddAd={handleAddAd}
             onAnalyze={handleAnalyze}
+            onReset={handleReset}   // 👈 skickar in Rensa-hanteraren
           />
 
           <div className="section-result">
