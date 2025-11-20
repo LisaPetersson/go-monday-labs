@@ -15,6 +15,176 @@ type RequestBody = {
   userId?: string;
 };
 
+// Typ för insert till ad_analysis_tokens
+type InsertableToken = {
+  user_id: string | null;
+  analysis_id: string;
+  ad_id: string | null;
+  source_block: string;
+  section_id: string | null;
+  token_type: string;
+  token_text: string;
+  position: number | null;
+};
+
+/**
+ * Plockar ut alla små-bitar från AdsAnalysisResult och gör dem
+ * till en platt lista som vi kan stoppa i ad_analysis_tokens.
+ */
+function extractTokensFromAnalysis(
+  analysis: AdsAnalysisResult,
+  analysisId: string,
+  userId: string | null
+): InsertableToken[] {
+  const tokens: InsertableToken[] = [];
+
+  // --- 1) ApplicationAdvice.perAd: themes, keywords, atsTips ---
+  if (analysis.applicationAdvice?.perAd) {
+    for (const perAd of analysis.applicationAdvice.perAd) {
+      const adId = perAd.adId;
+
+      (perAd.themes ?? []).forEach((theme, idx) => {
+        tokens.push({
+          user_id: userId,
+          analysis_id: analysisId,
+          ad_id: adId,
+          source_block: 'applicationAdvice',
+          section_id: null,
+          token_type: 'theme',
+          token_text: theme,
+          position: idx,
+        });
+      });
+
+      (perAd.keywords ?? []).forEach((kw, idx) => {
+        tokens.push({
+          user_id: userId,
+          analysis_id: analysisId,
+          ad_id: adId,
+          source_block: 'applicationAdvice',
+          section_id: null,
+          token_type: 'keyword',
+          token_text: kw,
+          position: idx,
+        });
+      });
+
+      (perAd.atsTips ?? []).forEach((tip, idx) => {
+        tokens.push({
+          user_id: userId,
+          analysis_id: analysisId,
+          ad_id: adId,
+          source_block: 'applicationAdvice',
+          section_id: null,
+          token_type: 'ats_tip',
+          token_text: tip,
+          position: idx,
+        });
+      });
+    }
+  }
+
+  // --- 2) deepAnalysisPerAd: strengths, risks, cultureAndFit, development ---
+  if (analysis.deepAnalysisPerAd) {
+    for (const deep of analysis.deepAnalysisPerAd) {
+      const adId = deep.adId;
+
+      (deep.strengths ?? []).forEach((s, idx) => {
+        tokens.push({
+          user_id: userId,
+          analysis_id: analysisId,
+          ad_id: adId,
+          source_block: 'deepAnalysis',
+          section_id: null,
+          token_type: 'strength',
+          token_text: s,
+          position: idx,
+        });
+      });
+
+      (deep.risks ?? []).forEach((r, idx) => {
+        tokens.push({
+          user_id: userId,
+          analysis_id: analysisId,
+          ad_id: adId,
+          source_block: 'deepAnalysis',
+          section_id: null,
+          token_type: 'risk',
+          token_text: r,
+          position: idx,
+        });
+      });
+
+      (deep.cultureAndFit ?? []).forEach((c, idx) => {
+        tokens.push({
+          user_id: userId,
+          analysis_id: analysisId,
+          ad_id: adId,
+          source_block: 'deepAnalysis',
+          section_id: null,
+          token_type: 'culture',
+          token_text: c,
+          position: idx,
+        });
+      });
+
+      (deep.development ?? []).forEach((d, idx) => {
+        tokens.push({
+          user_id: userId,
+          analysis_id: analysisId,
+          ad_id: adId,
+          source_block: 'deepAnalysis',
+          section_id: null,
+          token_type: 'development',
+          token_text: d,
+          position: idx,
+        });
+      });
+    }
+  }
+
+  // --- 3) sections: perAd.highlights + key_differences ---
+  if (analysis.sections) {
+    for (const section of analysis.sections) {
+      const sectionId = section.id;
+
+      // perAd-highlights
+      for (const perAd of section.perAd ?? []) {
+        const adId = perAd.adId;
+
+        (perAd.highlights ?? []).forEach((h, idx) => {
+          tokens.push({
+            user_id: userId,
+            analysis_id: analysisId,
+            ad_id: adId,
+            source_block: 'sections',
+            section_id: sectionId,
+            token_type: 'highlight',
+            token_text: h,
+            position: idx,
+          });
+        });
+      }
+
+      // key_differences (gäller ofta jämförelsen mellan annonser)
+      (section.key_differences ?? []).forEach((diff, idx) => {
+        tokens.push({
+          user_id: userId,
+          analysis_id: analysisId,
+          ad_id: null,
+          source_block: 'sections',
+          section_id: sectionId,
+          token_type: 'key_difference',
+          token_text: diff,
+          position: idx,
+        });
+      });
+    }
+  }
+
+  return tokens;
+}
+
 export async function POST(req: Request) {
   let body: RequestBody;
 
@@ -46,9 +216,7 @@ export async function POST(req: Request) {
       }
       const trimmed = value.trim();
       if (!trimmed) {
-        throw new Error(
-          `Annons på index ${index} är tom efter trimning.`
-        );
+        throw new Error(`Annons på index ${index} är tom efter trimning.`);
       }
       return trimmed;
     });
@@ -75,23 +243,43 @@ export async function POST(req: Request) {
     const analysis: AdsAnalysisResult =
       await analyzeAdsWithGemini(normalizedAds);
 
-    // 👉 Spara resultatet i Supabase (använder nu ad_rawdata + user_id)
+    // 👉 Spara resultatet i Supabase (ad_rawdata + user_id)
     const comparison = analysis.comparison ?? {};
-const recommendedAdId = comparison.recommendationAdId ?? null;
-const recommendedLabel = comparison.recommendationLabel ?? null;
+    const recommendedAdId = comparison.recommendationAdId ?? null;
+    const recommendedLabel = comparison.recommendationLabel ?? null;
 
-const { error: insertError } = await supabaseServer
-  .from('ad_rawdata')
-  .insert({
-    raw_ads: normalizedAds,
-    result: analysis,
-    user_id: userId ?? null,
-    recommended_ad_id: recommendedAdId,
-    recommended_label: recommendedLabel,
-  });
+    // 1) Spara själva analysen och få tillbaka id + user_id
+    const { data: insertedAnalysis, error: insertError } = await supabaseServer
+      .from('ad_rawdata')
+      .insert({
+        raw_ads: normalizedAds,
+        result: analysis,
+        user_id: userId ?? null,
+        recommended_ad_id: recommendedAdId,
+        recommended_label: recommendedLabel,
+      })
+      .select('id, user_id')
+      .single();
 
     if (insertError) {
       console.error('Kunde inte spara analys i Supabase:', insertError);
+    } else if (insertedAnalysis) {
+      const analysisId = insertedAnalysis.id as string;
+      const ownerId =
+        (insertedAnalysis as { user_id: string | null }).user_id ?? null;
+
+      // 2) Plocka ut tokens ur AI-resultatet
+      const tokens = extractTokensFromAnalysis(analysis, analysisId, ownerId);
+
+      if (tokens.length > 0) {
+        const { error: tokensError } = await supabaseServer
+          .from('ad_analysis_tokens')
+          .insert(tokens);
+
+        if (tokensError) {
+          console.error('Kunde inte spara analysis tokens:', tokensError);
+        }
+      }
     }
 
     // Logga resultatet så vi kan se om sections kommer med

@@ -1,7 +1,6 @@
 // app/page.tsx
 import Link from "next/link";
 
-
 export default function Home() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-zinc-50">
@@ -11,31 +10,39 @@ export default function Home() {
         </h1>
 
         <p className="text-zinc-600 mb-8">
-          Utforska experimentella verktyg för smartare jobbsök – börja med att analysera dina jobbannonser
-          eller håll utkik efter vår kommande CV-skapare.
+          Utforska experimentella verktyg för smartare jobbsök – börja med att
+          analysera dina jobbannonser, håll utkik efter vår kommande
+         AI--kollen, eller kika på den interna dashboarden.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          {/* Aktiv knapp till annonsanalys */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
+          {/* Annonsanalysen */}
           <Link
             href="/annonsanalys"
-            className="inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-medium bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 transition-colors"
+            className="inline-flex items-center justify-center rounded-xl border border-zinc-900 bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-50 shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
           >
-            Gå till annonsanalys
+            Öppna annonsanalysen
           </Link>
 
-          {/* Inaktiv "CV-skaparen"-knapp */}
+          {/* AI-kollen (kommer snart) */}
           <button
-            type="button"
             disabled
             aria-disabled="true"
-            className="relative inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-medium bg-zinc-200 text-zinc-500 shadow-sm cursor-not-allowed"
+            className="relative inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-zinc-200 px-4 py-3 text-sm font-medium text-zinc-500 shadow-sm cursor-not-allowed"
           >
-            CV-skaparen
-            <span className="absolute -top-2 right-3 rounded-full bg-amber-300/90 text-[11px] font-medium px-2 py-0.5 text-zinc-900 shadow-sm">
+            AI-kollen för CV
+            <span className="absolute -top-2 right-3 rounded-full bg-yellow-300 text-[11px] font-medium px-2 py-0.5 text-zinc-900 shadow-sm">
               Kommer snart
             </span>
           </button>
+
+          {/* Dashboard / adminportal */}
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-700 shadow-sm hover:border-zinc-500 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+          >
+            Dashboard (admin)
+          </Link>
         </div>
       </div>
     </main>
